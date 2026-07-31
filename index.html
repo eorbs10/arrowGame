@@ -1,303 +1,364 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>방향키 입력 게임</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background-color: #1a1a1a; 
-      margin: 0;
-    }
-    #game-card {
-      background: #fff;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 25px rgba(0,0,0,0.8);
-      text-align: center;
-      width: 700px; /* 3칸짜리 망곰이가 나올 수 있으므로 넉넉하게 */
-    }
-    .arrow-container {
-      display: flex;
-      justify-content: center;
-      flex-wrap: nowrap; 
-      overflow-x: visible; 
-      gap: 8px;
-      margin: 20px 0;
-      font-size: 2rem;
-      min-height: 50px;
-    }
-    
-    .arrow {
-      flex-shrink: 0; 
-      width: 40px; 
-      height: 40px;
-      line-height: 40px;
-      border: 2px solid #ccc;
-      border-radius: 8px;
-      font-family: "Arial Black", "Impact", sans-serif;
-      font-weight: 900; 
-      color: #0033cc; 
-      
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    /* --- 망곰이(스페이스바) 전용 스타일 --- */
-    .arrow.space-key {
-      background-color: #fff; /* 요청하신 흰색 배경 */
-      overflow: hidden;
-      padding: 0; 
-      /* 망곰이 여러 마리가 가로로 예쁘게 나열되도록 설정 */
-      justify-content: flex-start;
-      gap: 8px; 
-    }
-    /* 망곰이 이미지 개별 스타일 */
-    .arrow.space-key img {
-      width: 40px;
-      height: 40px;
-      object-fit: cover;
-      border-radius: 6px;
-    }
-    
-    .arrow.bg-up { background-color: #e3f2fd; } 
-    .arrow.bg-down { background-color: #ffebee; } 
-    .arrow.bg-left { background-color: #e8f5e9; } 
-    .arrow.bg-right { background-color: #f3e5f5; } 
-
-    /* 입력 성공 시 처리 (초록색 테두리와 배경) */
-    .arrow.correct {
-      background-color: #4caf50 !important;
-      color: white !important;
-      border-color: #4caf50 !important;
-    }
-    
-    #timer-container {
-      width: 100%;
-      height: 20px;
-      background: #eee;
-      border-radius: 10px;
-      margin: 15px 0;
-      overflow: hidden;
-      border: 1px solid #ccc;
-    }
-    #timer-bar {
-      width: 100%;
-      height: 100%;
-      background: #4caf50;
-      transition: width 0.02s linear, background 0.2s ease;
-    }
-    
-    #message {
-      font-size: 1.1rem;
-      font-weight: bold;
-      min-height: 50px; 
-      margin: 10px 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      color: #333;
-    }
-    
-    #restart-btn {
-      display: none;
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 1rem;
-      font-weight: bold;
-      background-color: #ff9800;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    #restart-btn:hover {
-      background-color: #e68a00;
-    }
-    
-    #stage-info {
-      font-size: 1.2rem;
-      font-weight: bold;
-      margin: 0;
-      color: #333;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>WebGL_Flutter_Interface_Draft.xlsx</title>
+<style>
+  body { font-family: 'Malgun Gothic', sans-serif; margin: 0; background: #f3f2f1; user-select: none; overflow: auto; }
+  .toolbar { 
+    height: 40px; background: #217346; color: white; padding: 10px 20px; 
+    font-size: 14px; display: flex; align-items: center; 
+    position: sticky; top: 0; z-index: 10; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  /* 헤더(1) + A~F열(6) + G~P열(10) = 총 17개의 열로 분할 */
+  .grid { 
+    display: grid; 
+    grid-template-columns: 40px 140px 180px 80px 150px 300px 400px repeat(10, 100px); 
+  }
+  
+  .cell { 
+    border-right: 1px solid #d4d4d4; 
+    border-bottom: 1px solid #d4d4d4; 
+    min-height: 24px; 
+    display: flex; 
+    align-items: center; 
+    padding: 4px 6px; 
+    font-size: 12px; 
+    background: white; 
+    cursor: cell; 
+    box-sizing: border-box;
+    white-space: pre-wrap; 
+    word-break: break-all;
+  }
+  .header { 
+    background: #f3f2f1; text-align: center; justify-content: center; 
+    padding-left: 0; color: #666; font-size: 12px; 
+  }
+  .cell.active { border: 2px solid #217346; outline: 1px solid #217346; z-index: 1; }
+  
+  .blue-row { background-color: #b4c6e7 !important; font-weight: bold; }
+  .strike { text-decoration: line-through; color: #888; }
+</style>
 </head>
 <body>
+  <div class="toolbar">파일 | 홈 | 삽입 | 페이지 레이아웃 | 수식 | 데이터 | 검토 | 보기</div>
+  <div class="grid" id="excel-grid"></div>
 
-<div id="game-card">
-  <p id="stage-info">스테이지: <span id="stage">1</span></p>
-  
-  <div id="timer-container">
-    <div id="timer-bar"></div>
-  </div>
-  
-  <div class="arrow-container" id="arrow-box"></div>
-  <div id="message">방향키(또는 스페이스바)를 눌러 시작하세요!</div>
-  
-  <button id="restart-btn" onclick="startGame()">다시 시작하기</button>
-</div>
+  <script>
+    const grid = document.getElementById('excel-grid');
+    // CSS grid-template-columns의 데이터 칸 개수(16개)와 정확히 일치시킴 (레이아웃 깨짐 방지)
+    const cols = 16; 
+    const rows = 45; 
 
-<script>
-  const validKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '];
-  
-  const arrowSymbols = {
-    'ArrowUp': '⬆',
-    'ArrowDown': '⬇',
-    'ArrowLeft': '⬅',
-    'ArrowRight': '➡'
-  };
-
-  let currentStage = 1;
-  let targetPattern = []; // 이제 객체 배열을 저장합니다: { key: 'ArrowUp', size: 1 }
-  let currentIndex = 0;
-  
-  let timerInterval;
-  let maxTime = 5; 
-  let timeLeft = 5;
-  let isGameOver = false;
-
-  function startGame() {
-    currentStage = 1;
-    isGameOver = false;
-    document.getElementById('restart-btn').style.display = 'none';
-    document.getElementById('stage').innerText = currentStage;
-    nextStageSetup();
-  }
-
-  function nextStageSetup() {
-    let length = Math.min(4 + currentStage, 10);
-    
-    maxTime = Math.max(5 - (currentStage - 1) * 0.5, 2.4);
-    timeLeft = maxTime;
-    
-    generatePattern(length);
-    document.getElementById('message').innerHTML = "제한시간 내에 입력하세요!";
-    document.getElementById('message').style.color = "#333";
-    
-    startTimer();
-  }
-
-  function startTimer() {
-    clearInterval(timerInterval);
-    const timerBar = document.getElementById('timer-bar');
-    
-    timerInterval = setInterval(() => {
-      timeLeft -= 0.02; 
-      
-      let widthPercentage = (timeLeft / maxTime) * 100;
-      timerBar.style.width = widthPercentage + "%";
-      
-      if (widthPercentage > 50) timerBar.style.background = "#4caf50";
-      else if (widthPercentage > 20) timerBar.style.background = "#ff9800";
-      else timerBar.style.background = "#f44336";
-
-      if (timeLeft <= 0) {
-        gameOver("시간 초과!");
-      }
-    }, 20);
-  }
-
-  function gameOver(msg) {
-    isGameOver = true;
-    clearInterval(timerInterval);
-    document.getElementById('message').innerHTML = `<span>❌ ${msg}</span><span>최종 도달 스테이지: <strong>${currentStage}</strong></span>`;
-    document.getElementById('message').style.color = "#f44336";
-    document.getElementById('restart-btn').style.display = 'inline-block';
-  }
-
-  function generatePattern(length) {
-    targetPattern = [];
-    for (let i = 0; i < length; i++) {
-      const key = validKeys[Math.floor(Math.random() * validKeys.length)];
-      
-      // 스페이스바가 당첨되면 1~3칸 중 랜덤으로 사이즈 지정
-      if (key === ' ') {
-        const randomSize = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
-        targetPattern.push({ key: key, size: randomSize });
-      } else {
-        // 일반 방향키는 무조건 1칸
-        targetPattern.push({ key: key, size: 1 });
-      }
+    // 1. 상단 알파벳 헤더 생성
+    grid.appendChild(createCell('', 'header'));
+    for(let i = 0; i < cols; i++) {
+      grid.appendChild(createCell(String.fromCharCode(65 + i), 'header'));
     }
-    currentIndex = 0;
-    renderArrows();
-  }
 
-  function renderArrows() {
-    const box = document.getElementById('arrow-box');
-    box.innerHTML = '';
-    
-    targetPattern.forEach((item, index) => {
-      const span = document.createElement('div');
-      span.className = 'arrow';
-      
-      if (item.key === 'ArrowUp') span.classList.add('bg-up');
-      if (item.key === 'ArrowDown') span.classList.add('bg-down');
-      if (item.key === 'ArrowLeft') span.classList.add('bg-left');
-      if (item.key === 'ArrowRight') span.classList.add('bg-right');
-      
-      if (item.key === ' ') {
-        span.classList.add('space-key');
-        // 사이즈(칸 수)에 맞춰 가로 너비 동적 계산 (칸당 40px + 칸 사이 여백 8px)
-        span.style.width = `${(item.size * 40) + ((item.size - 1) * 8)}px`;
-      }
-      
-      if (index < currentIndex) {
-        span.classList.add('correct');
-      }
+    // 2. 기본 셀 그리드 생성
+    for(let r = 1; r <= rows; r++) {
+      let rowHeader = createCell(r, 'header');
+      rowHeader.id = `row-header-${r}`;
+      grid.appendChild(rowHeader); 
 
-      if (item.key === ' ') {
-        // 칸 수(size)만큼 망곰이 이미지를 반복해서 넣어줍니다.
-        let imagesHtml = '';
-        for(let i = 0; i < item.size; i++) {
-          imagesHtml += `<img src="망곰이.png" alt="SPACE">`;
-        }
-        span.innerHTML = imagesHtml;
-      } else {
-        span.innerText = arrowSymbols[item.key];
-      }
-      
-      box.appendChild(span);
-    });
-  }
-
-  window.addEventListener('keydown', (e) => {
-    if (isGameOver) return;
-    
-    if (!validKeys.includes(e.key)) return;
-
-    e.preventDefault();
-
-    // targetPattern이 객체 배열로 바뀌었으므로 .key로 값을 꺼내어 비교합니다
-    if (e.key === targetPattern[currentIndex].key) {
-      currentIndex++;
-      renderArrows();
-
-      if (currentIndex === targetPattern.length) {
-        clearInterval(timerInterval); 
-        currentStage++;
-        document.getElementById('stage').innerText = currentStage;
-        document.getElementById('message').innerHTML = "CLEAR!";
-        document.getElementById('message').style.color = "#4caf50";
+      for(let c = 0; c < cols; c++) {
+        let cell = createCell('', 'cell-data');
+        cell.dataset.row = r;
+        cell.dataset.col = c + 1; 
         
-        setTimeout(() => {
-          if(!isGameOver) nextStageSetup();
-        }, 150); 
+        cell.onclick = (e) => {
+          document.querySelectorAll('.cell').forEach(el => el.classList.remove('active'));
+          e.currentTarget.classList.add('active');
+        };
+        grid.appendChild(cell);
       }
-    } else {
-      gameOver("잘못된 키를 눌렀습니다!");
     }
-  });
 
-  startGame();
-</script>
+    function createCell(text, className) {
+      const div = document.createElement('div');
+      div.className = 'cell ' + className;
+      div.innerText = text;
+      return div;
+    }
 
+    // 3. 더미 데이터(이미지 내용) 채워넣기
+    function fillDummyData() {
+      const data = [
+        {r:1, c:1, t:'GameObject Name'}, {r:1, c:2, t:'Function Name'}, {r:1, c:3, t:'parameter'}, {r:1, c:4, t:''}, {r:1, c:5, t:'기능 설명'}, {r:1, c:6, t:'비고'},
+        
+        {r:3, c:2, t:'SetReady', strike:true}, {r:3, c:3, t:'-'}, {r:3, c:5, t:'Unity 의 사운드 초기화 시작', strike:true}, {r:3, c:6, t:'사용자의 입력을 유도한 후 호출'},
+        {r:4, c:2, t:'PlayEmergencyAlarm'}, {r:4, c:3, t:'-'}, {r:4, c:5, t:'비상 사운드 재생'},
+        {r:5, c:2, t:'StopEmergencyAlarm'}, {r:5, c:3, t:'-'}, {r:5, c:5, t:'비상 사운드 종료'},
+        {r:6, c:2, t:'PlayErrorAlarm'}, {r:6, c:3, t:'-'}, {r:6, c:5, t:'이벤트 사운드 재생'},
+        {r:7, c:1, t:'AlarmManager'}, {r:7, c:2, t:'StopErrorAlarm'}, {r:7, c:3, t:'-'}, {r:7, c:5, t:'이벤트 사운드 종료'},
+        
+        {r:8, c:3, t:'string', color:'#0000ff'}, {r:8, c:4, t:'siteId'}, 
+        {r:9, c:3, t:'string', color:'#0000ff'}, {r:9, c:4, t:'siteCd'},
+        {r:10, c:3, t:'int', color:'#0000ff'}, {r:10, c:4, t:'userId'},
+        {r:11, c:3, t:'string', color:'#0000ff'}, {r:11, c:4, t:'siteNm'},
+        {r:12, c:3, t:'string', color:'#0000ff'}, {r:12, c:4, t:'authCd'},
+        {r:13, c:1, t:'WebInterface'}, {r:13, c:2, t:'BeginSite'}, {r:13, c:3, t:'string', color:'#0000ff'}, {r:13, c:4, t:'access_token'}, {r:13, c:5, t:'사이트 변경'},
+        
+        {r:8, c:6, t:'{\n  "siteId":123,\n  "siteCd":"ICT0000008",\n  "userId":8,\n  "siteNm":"간석오거리",\n  "authCd":"UAT00001",\n  "access_token":"발급된 토큰"\n}'},
+        
+        {r:15, c:2, t:'AllPopupClose'}, {r:15, c:3, t:'-'}, {r:15, c:4, t:'-'}, {r:15, c:5, t:'모든창을 닫음'},
+        {r:16, c:2, t:'PopupLayer'}, {r:16, c:3, t:'-'}, {r:16, c:4, t:'-'}, {r:16, c:5, t:'Layer창을 활성화'},
+        {r:17, c:2, t:'PopupPoi'}, {r:17, c:3, t:'-'}, {r:17, c:4, t:'-'}, {r:17, c:5, t:'POI 토글 창을 활성화'},
+        {r:18, c:2, t:'UnityEquipmentCount'}, {r:18, c:3, t:'-'}, {r:18, c:4, t:'-'}, {r:18, c:5, t:'장비 개수를 파악하여 전달명령 실행함'},
+        {r:19, c:2, t:'PopupForceEvac'}, {r:19, c:3, t:'-'}, {r:19, c:4, t:'-'}, {r:19, c:5, t:'강제대피 설정창 팝업'},
+        {r:21, c:1, t:'ProjectManager'}, {r:21, c:2, t:'PoiPopupClose'}, {r:21, c:3, t:'-'}, {r:21, c:4, t:'-'}, {r:21, c:5, t:'POI 팝업창이 열려있으면 창을 닫는다'},
+        
+        {r:23, c:2, t:'AnyKeyDown'}, {r:23, c:3, t:'-'}, {r:23, c:5, t:'마우스나 키보드 버튼 누를 때 호출'},
+        {r:24, c:2, t:'UnityError'}, {r:24, c:3, t:'string', color:'#0000ff'}, {r:24, c:4, t:'log'}, {r:24, c:5, t:'WebGL 에서 발생한 오류 전달'}, {r:24, c:6, t:'{\n  "func":"UnityError",\n  "message":"log"\n}'},
+        {r:25, c:2, t:'SiteStart'}, {r:25, c:3, t:'int', color:'#0000ff'}, {r:25, c:4, t:'siteId'}, {r:25, c:5, t:'사이트의 모든 정보가 초기화 된 후 통보'}, {r:25, c:6, t:'{\n  "func":"SiteStart",\n  "siteId":1, // 현재 사이트 ID\n}'},
+        {r:26, c:2, t:'CloseLayer'}, {r:26, c:3, t:'-'}, 
+        {r:27, c:2, t:'ClosePoi'}, {r:27, c:3, t:'-'}, {r:27, c:5, t:'POI 창 CLOSE 버튼 클릭시 요청'},
+        {r:28, c:2, t:'UnityEquipmentCount'}, {r:28, c:3, t:'string', color:'#0000ff'}, {r:28, c:4, t:'msg'}, {r:28, c:5, t:'장비 개수 JSON 을 넘겨줌'}, {r:28, c:6, t:'[\n  {\n    // 장비 리스트\n  }\n]'}
+      ];
+
+      data.forEach(d => {
+        let cell = document.querySelector(`[data-row="${d.r}"][data-col="${d.c}"]`);
+        if(cell) {
+          cell.innerText = d.t;
+          if(d.color) cell.style.color = d.color;
+          if(d.strike) cell.classList.add('strike');
+        }
+      });
+
+      const mergeBlueRow = (r, text) => {
+        let cell = document.querySelector(`[data-row="${r}"][data-col="1"]`);
+        cell.innerText = text;
+        cell.classList.add('blue-row');
+        cell.style.gridColumn = 'span 6';
+        for(let c = 2; c <= 6; c++) {
+          document.querySelector(`[data-row="${r}"][data-col="${c}"]`).style.display = 'none';
+        }
+      };
+      
+      mergeBlueRow(2, '※ Flutter to WebGL');
+      mergeBlueRow(22, '※ WebGL to Flutter');
+      
+      document.getElementById('row-header-8').style.height = '100px';
+      document.getElementById('row-header-24').style.height = '60px';
+      document.getElementById('row-header-25').style.height = '60px';
+    }
+
+    // ==========================================
+    // 좌측 하단 미니 게임 로직
+    // ==========================================
+
+    const validKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '];
+    const arrowSymbols = { 'ArrowUp': '⬆', 'ArrowDown': '⬇', 'ArrowLeft': '⬅', 'ArrowRight': '➡' };
+    const bgColors = {
+      'ArrowUp': '#e3f2fd', 'ArrowDown': '#ffebee',
+      'ArrowLeft': '#e8f5e9', 'ArrowRight': '#f3e5f5'
+    };
+
+    let currentStage = 1;
+    let targetPattern = [];
+    let currentIndex = 0;
+    let timerInterval;
+    let maxTime = 5; 
+    let timeLeft = 5;
+    let isGameOver = false;
+
+    // 게임 시작 위치 (좌측 하단)
+    const gameStartRow = 30; // 30행
+    const gameStartCol = 2;  // B열
+    const gameSpan = 4;      // B, C, D, E열 병합
+
+    function initGameUI() {
+      // 1. 스테이지 표시 (Row 30)
+      let stageCell = document.querySelector(`[data-row="${gameStartRow}"][data-col="${gameStartCol}"]`);
+      stageCell.style.gridColumn = `span ${gameSpan}`;
+      stageCell.style.fontWeight = 'bold';
+      stageCell.style.color = '#777';
+      stageCell.style.borderTop = '2px dashed #bbb';
+      for(let c = 1; c < gameSpan; c++) {
+        document.querySelector(`[data-row="${gameStartRow}"][data-col="${gameStartCol + c}"]`).style.display = 'none';
+      }
+
+      // 2. 게임 메인 영역 (Row 32)
+      let gameArea = document.querySelector(`[data-row="${gameStartRow + 2}"][data-col="${gameStartCol}"]`);
+      gameArea.style.gridColumn = `span ${gameSpan}`;
+      gameArea.id = "game-board-container";
+      gameArea.style.display = 'flex';
+      gameArea.style.gap = '4px';
+      gameArea.style.backgroundColor = '#fafafa';
+      gameArea.style.border = '1px solid #ccc';
+      gameArea.style.padding = '5px';
+      document.getElementById(`row-header-${gameStartRow + 2}`).style.height = '40px';
+      
+      for(let c = 1; c < gameSpan; c++) {
+        document.querySelector(`[data-row="${gameStartRow + 2}"][data-col="${gameStartCol + c}"]`).style.display = 'none';
+      }
+
+      // 3. 타이머 바 (Row 33)
+      let timerCell = document.querySelector(`[data-row="${gameStartRow + 3}"][data-col="${gameStartCol}"]`);
+      timerCell.style.gridColumn = `span ${gameSpan}`;
+      timerCell.style.padding = '0';
+      timerCell.innerHTML = `<div id="timer-bar" style="width: 100%; height: 100%; background: #217346; transition: width 0.02s linear;"></div>`;
+      for(let c = 1; c < gameSpan; c++) {
+        document.querySelector(`[data-row="${gameStartRow + 3}"][data-col="${gameStartCol + c}"]`).style.display = 'none';
+      }
+
+      // 4. 메시지 창 (Row 34)
+      let msgCell = document.querySelector(`[data-row="${gameStartRow + 4}"][data-col="${gameStartCol}"]`);
+      msgCell.style.gridColumn = `span ${gameSpan}`;
+      msgCell.style.fontWeight = 'bold';
+      msgCell.style.fontSize = '12px'; 
+      for(let c = 1; c < gameSpan; c++) {
+        document.querySelector(`[data-row="${gameStartRow + 4}"][data-col="${gameStartCol + c}"]`).style.display = 'none';
+      }
+
+      // 5. 재시작 버튼 (Row 35)
+      let btnCell = document.querySelector(`[data-row="${gameStartRow + 5}"][data-col="${gameStartCol}"]`);
+      btnCell.style.gridColumn = 'span 2';
+      btnCell.style.padding = '2px';
+      btnCell.innerHTML = `<button id="restart-btn" style="display:none; width:100%; height:100%; background:#217346; color:white; border:none; cursor:pointer; font-size:11px;">Init Script</button>`;
+      document.querySelector(`[data-row="${gameStartRow + 5}"][data-col="${gameStartCol + 1}"]`).style.display = 'none';
+      document.getElementById('restart-btn').onclick = () => { startGame(); };
+    }
+
+    function updateMessage(msg, color) {
+      let msgCell = document.querySelector(`[data-row="${gameStartRow + 4}"][data-col="${gameStartCol}"]`);
+      msgCell.innerHTML = msg;
+      msgCell.style.color = color;
+    }
+
+    function startGame() {
+      currentStage = 1;
+      isGameOver = false;
+      document.getElementById('restart-btn').style.display = 'none';
+      document.querySelector(`[data-row="${gameStartRow}"][data-col="${gameStartCol}"]`).innerText = `// Test Script Execution: Vol ${currentStage}`;
+      nextStageSetup();
+    }
+
+    function nextStageSetup() {
+      let length = Math.min(3 + currentStage, 10);
+      maxTime = Math.max(5 - (currentStage - 1) * 0.5, 2.4);
+      timeLeft = maxTime;
+      
+      generatePattern(length);
+      updateMessage("Awaiting input data...", "#888");
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      const timerBar = document.getElementById('timer-bar');
+      
+      timerInterval = setInterval(() => {
+        timeLeft -= 0.02; 
+        let widthPercentage = (timeLeft / maxTime) * 100;
+        timerBar.style.width = widthPercentage + "%";
+        
+        if (widthPercentage > 50) timerBar.style.background = "#217346";
+        else if (widthPercentage > 20) timerBar.style.background = "#ff9800";
+        else timerBar.style.background = "#f44336";
+
+        if (timeLeft <= 0) {
+          gameOver("Timeout Error");
+        }
+      }, 20);
+    }
+
+    function gameOver(msg) {
+      isGameOver = true;
+      clearInterval(timerInterval);
+      updateMessage(`❌ ${msg} (Line: ${currentStage})`, "#f44336");
+      document.getElementById('restart-btn').style.display = 'block';
+    }
+
+    function generatePattern(targetLength) {
+      targetPattern = [];
+      for (let i = 0; i < targetLength; i++) {
+        let key = validKeys[Math.floor(Math.random() * validKeys.length)];
+        let size = (key === ' ') ? Math.floor(Math.random() * 3) + 1 : 1;
+        targetPattern.push({ key: key, size: size });
+      }
+      currentIndex = 0;
+      renderArrows();
+    }
+
+    function renderArrows() {
+      const container = document.getElementById("game-board-container");
+      container.innerHTML = ''; 
+
+      targetPattern.forEach((item, index) => {
+        const block = document.createElement('div');
+        
+        block.style.display = 'flex';
+        block.style.alignItems = 'center';
+        block.style.justifyContent = 'center';
+        block.style.height = '28px';
+        block.style.border = '1px solid #aaa';
+        block.style.borderRadius = '2px';
+        block.style.fontSize = '14px';
+        block.style.fontFamily = '"Arial Black", "Impact", sans-serif';
+        block.style.fontWeight = '900';
+        block.style.boxSizing = 'border-box';
+        block.style.gap = '2px';
+        block.style.overflow = 'hidden';
+        
+        const baseWidth = 28;
+        block.style.width = `${(item.size * baseWidth) + ((item.size - 1) * 4)}px`;
+        
+        if (index < currentIndex) {
+          block.style.backgroundColor = '#217346'; 
+          block.style.color = 'white';
+          block.style.borderColor = '#217346';
+        } else {
+          block.style.backgroundColor = bgColors[item.key] || '#ffffff';
+          block.style.color = '#0033cc';
+        }
+
+        if (item.key === ' ') {
+          let imagesHtml = '';
+          for(let i = 0; i < item.size; i++) {
+             imagesHtml += `<img src="망곰이.png" alt="S" style="width: 24px; height: 24px; object-fit: cover;">`;
+          }
+          block.innerHTML = imagesHtml;
+        } else {
+          block.innerHTML = `<span>${arrowSymbols[item.key]}</span>`;
+        }
+        
+        container.appendChild(block);
+      });
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (isGameOver) return;
+      if (!validKeys.includes(e.key)) return;
+      e.preventDefault();
+
+      if (e.key === targetPattern[currentIndex].key) {
+        currentIndex++;
+        renderArrows();
+
+        if (currentIndex === targetPattern.length) {
+          clearInterval(timerInterval); 
+          currentStage++;
+          document.querySelector(`[data-row="${gameStartRow}"][data-col="${gameStartCol}"]`).innerText = `// Test Script Execution: Vol ${currentStage}`;
+          updateMessage("Compile Success...", "#217346");
+          
+          setTimeout(() => {
+            if(!isGameOver) nextStageSetup();
+          }, 150); 
+        }
+      } else {
+        gameOver("Syntax Error");
+      }
+    });
+
+    // 실행
+    fillDummyData();
+    initGameUI();
+    startGame();
+
+  </script>
 </body>
 </html>
