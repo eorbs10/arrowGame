@@ -20,7 +20,7 @@
       border-radius: 12px;
       box-shadow: 0 4px 25px rgba(0,0,0,0.8);
       text-align: center;
-      width: 550px; 
+      width: 550px; /* 원래 사이즈로 롤백 */
     }
     .arrow-container {
       display: flex;
@@ -30,17 +30,21 @@
       gap: 8px;
       margin: 20px 0;
       font-size: 2rem;
-      font-weight: bold;
       min-height: 50px;
     }
     .arrow {
       flex-shrink: 0; 
-      width: 40px;
+      width: 40px; /* 원래 사이즈로 롤백 */
       height: 40px;
       line-height: 40px;
       border: 2px solid #ccc;
       border-radius: 8px;
       background: #fafafa;
+      
+      /* --- 화살표 두께를 굵게 만드는 핵심 CSS --- */
+      font-family: "Arial Black", "Impact", sans-serif; /* 두꺼운 폰트 적용 */
+      font-weight: 900; /* 폰트 굵기 최대치 */
+      color: #222; /* 화살표 색상을 더 진한 검은색으로 */
     }
     .arrow.correct {
       background: #4caf50;
@@ -72,6 +76,7 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      color: #333;
     }
     
     #restart-btn {
@@ -90,7 +95,6 @@
       background-color: #e68a00;
     }
     
-    /* 스테이지 텍스트 스타일 약간 조정 */
     #stage-info {
       font-size: 1.2rem;
       font-weight: bold;
@@ -102,7 +106,6 @@
 <body>
 
 <div id="game-card">
-  <!-- 제목 삭제하고 스테이지 표시만 남김 -->
   <p id="stage-info">스테이지: <span id="stage">1</span></p>
   
   <div id="timer-container">
@@ -117,11 +120,13 @@
 
 <script>
   const arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+  
+  // --- 얇은 선(↑)에서 두꺼운 화살표 기호(⬆)로 변경 ---
   const arrowSymbols = {
-    'ArrowUp': '↑',
-    'ArrowDown': '↓',
-    'ArrowLeft': '←',
-    'ArrowRight': '→'
+    'ArrowUp': '⬆',
+    'ArrowDown': '⬇',
+    'ArrowLeft': '⬅',
+    'ArrowRight': '➡'
   };
 
   let currentStage = 1;
@@ -207,6 +212,9 @@
 
   window.addEventListener('keydown', (e) => {
     if (isGameOver || !arrows.includes(e.key)) return;
+
+    // 기본 스크롤 방지 (방향키 누를 때 화면 움직임 방지)
+    e.preventDefault();
 
     if (e.key === targetPattern[currentIndex]) {
       currentIndex++;
