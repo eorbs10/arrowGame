@@ -12,7 +12,6 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
   
-  /* 헤더(1) + A~F열(6) + G~P열(10) = 총 17개의 열로 분할 */
   .grid { 
     display: grid; 
     grid-template-columns: 40px 140px 180px 80px 150px 300px 400px repeat(10, 100px); 
@@ -48,7 +47,6 @@
 
   <script>
     const grid = document.getElementById('excel-grid');
-    // CSS grid-template-columns의 데이터 칸 개수(16개)와 정확히 일치시킴 (레이아웃 깨짐 방지)
     const cols = 16; 
     const rows = 45; 
 
@@ -84,7 +82,7 @@
       return div;
     }
 
-    // 3. 더미 데이터(이미지 내용) 채워넣기
+    // 3. 더미 데이터 채워넣기
     function fillDummyData() {
       const data = [
         {r:1, c:1, t:'GameObject Name'}, {r:1, c:2, t:'Function Name'}, {r:1, c:3, t:'parameter'}, {r:1, c:4, t:''}, {r:1, c:5, t:'기능 설명'}, {r:1, c:6, t:'비고'},
@@ -214,11 +212,11 @@
         document.querySelector(`[data-row="${gameStartRow + 4}"][data-col="${gameStartCol + c}"]`).style.display = 'none';
       }
 
-      // 5. 재시작 버튼 (Row 35)
+      // 5. 재시작 버튼 (Row 35) - 마우스 클릭용으로 남겨둠
       let btnCell = document.querySelector(`[data-row="${gameStartRow + 5}"][data-col="${gameStartCol}"]`);
       btnCell.style.gridColumn = 'span 2';
       btnCell.style.padding = '2px';
-      btnCell.innerHTML = `<button id="restart-btn" style="display:none; width:100%; height:100%; background:#217346; color:white; border:none; cursor:pointer; font-size:11px;">Init Script</button>`;
+      btnCell.innerHTML = `<button id="restart-btn" style="display:none; width:100%; height:100%; background:#217346; color:white; border:none; cursor:pointer; font-size:11px;">Init Script (Press Space)</button>`;
       document.querySelector(`[data-row="${gameStartRow + 5}"][data-col="${gameStartCol + 1}"]`).style.display = 'none';
       document.getElementById('restart-btn').onclick = () => { startGame(); };
     }
@@ -269,7 +267,7 @@
     function gameOver(msg) {
       isGameOver = true;
       clearInterval(timerInterval);
-      updateMessage(`❌ ${msg} (Line: ${currentStage})`, "#f44336");
+      updateMessage(`❌ ${msg} (Line: ${currentStage}) - Press Space to Restart`, "#f44336");
       document.getElementById('restart-btn').style.display = 'block';
     }
 
@@ -331,7 +329,15 @@
     }
 
     window.addEventListener('keydown', (e) => {
-      if (isGameOver) return;
+      // === 변경된 부분: 게임 오버 상태일 때 스페이스바 처리 ===
+      if (isGameOver) {
+        if (e.key === ' ') {
+          e.preventDefault(); // 스페이스바 누를 때 스크롤이 내려가는 것 방지
+          startGame();
+        }
+        return; // 다른 키는 무시
+      }
+      
       if (!validKeys.includes(e.key)) return;
       e.preventDefault();
 
