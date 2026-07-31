@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>닭장 탈출 - 하이퍼 모드 (기록 표시)</title>
+  <title>방향키 입력 게임</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -67,7 +67,6 @@
     #message {
       font-size: 1.1rem;
       font-weight: bold;
-      /* 게임 종료 시 메시지가 두 줄로 나올 수 있도록 높이 수정 */
       min-height: 50px; 
       margin: 10px 0;
       display: flex;
@@ -90,13 +89,21 @@
     #restart-btn:hover {
       background-color: #e68a00;
     }
+    
+    /* 스테이지 텍스트 스타일 약간 조정 */
+    #stage-info {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin: 0;
+      color: #333;
+    }
   </style>
 </head>
 <body>
 
 <div id="game-card">
-  <h2>🐔 닭장 탈출 🐔</h2>
-  <p>스테이지: <span id="stage">1</span></p>
+  <!-- 제목 삭제하고 스테이지 표시만 남김 -->
+  <p id="stage-info">스테이지: <span id="stage">1</span></p>
   
   <div id="timer-container">
     <div id="timer-bar"></div>
@@ -170,7 +177,6 @@
   function gameOver(msg) {
     isGameOver = true;
     clearInterval(timerInterval);
-    // 종료 시 최종 스테이지를 함께 출력하도록 수정
     document.getElementById('message').innerHTML = `<span>❌ ${msg}</span><span>최종 도달 스테이지: <strong>${currentStage}</strong></span>`;
     document.getElementById('message').style.color = "#f44336";
     document.getElementById('restart-btn').style.display = 'inline-block';
