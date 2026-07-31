@@ -20,7 +20,7 @@
       border-radius: 12px;
       box-shadow: 0 4px 25px rgba(0,0,0,0.8);
       text-align: center;
-      width: 550px; /* 원래 사이즈로 롤백 */
+      width: 700px; /* 3칸짜리 망곰이가 나올 수 있으므로 넉넉하게 */
     }
     .arrow-container {
       display: flex;
@@ -32,24 +32,50 @@
       font-size: 2rem;
       min-height: 50px;
     }
+    
     .arrow {
       flex-shrink: 0; 
-      width: 40px; /* 원래 사이즈로 롤백 */
+      width: 40px; 
       height: 40px;
       line-height: 40px;
       border: 2px solid #ccc;
       border-radius: 8px;
-      background: #fafafa;
+      font-family: "Arial Black", "Impact", sans-serif;
+      font-weight: 900; 
+      color: #0033cc; 
       
-      /* --- 화살표 두께를 굵게 만드는 핵심 CSS --- */
-      font-family: "Arial Black", "Impact", sans-serif; /* 두꺼운 폰트 적용 */
-      font-weight: 900; /* 폰트 굵기 최대치 */
-      color: #222; /* 화살표 색상을 더 진한 검은색으로 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+    
+    /* --- 망곰이(스페이스바) 전용 스타일 --- */
+    .arrow.space-key {
+      background-color: #fff; /* 요청하신 흰색 배경 */
+      overflow: hidden;
+      padding: 0; 
+      /* 망곰이 여러 마리가 가로로 예쁘게 나열되도록 설정 */
+      justify-content: flex-start;
+      gap: 8px; 
+    }
+    /* 망곰이 이미지 개별 스타일 */
+    .arrow.space-key img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+    
+    .arrow.bg-up { background-color: #e3f2fd; } 
+    .arrow.bg-down { background-color: #ffebee; } 
+    .arrow.bg-left { background-color: #e8f5e9; } 
+    .arrow.bg-right { background-color: #f3e5f5; } 
+
+    /* 입력 성공 시 처리 (초록색 테두리와 배경) */
     .arrow.correct {
-      background: #4caf50;
-      color: white;
-      border-color: #4caf50;
+      background-color: #4caf50 !important;
+      color: white !important;
+      border-color: #4caf50 !important;
     }
     
     #timer-container {
@@ -113,15 +139,14 @@
   </div>
   
   <div class="arrow-container" id="arrow-box"></div>
-  <div id="message">방향키를 눌러 시작하세요!</div>
+  <div id="message">방향키(또는 스페이스바)를 눌러 시작하세요!</div>
   
   <button id="restart-btn" onclick="startGame()">다시 시작하기</button>
 </div>
 
 <script>
-  const arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+  const validKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '];
   
-  // --- 얇은 선(↑)에서 두꺼운 화살표 기호(⬆)로 변경 ---
   const arrowSymbols = {
     'ArrowUp': '⬆',
     'ArrowDown': '⬇',
@@ -130,7 +155,7 @@
   };
 
   let currentStage = 1;
-  let targetPattern = [];
+  let targetPattern = []; // 이제 객체 배열을 저장합니다: { key: 'ArrowUp', size: 1 }
   let currentIndex = 0;
   
   let timerInterval;
@@ -190,7 +215,16 @@
   function generatePattern(length) {
     targetPattern = [];
     for (let i = 0; i < length; i++) {
-      targetPattern.push(arrows[Math.floor(Math.random() * arrows.length)]);
+      const key = validKeys[Math.floor(Math.random() * validKeys.length)];
+      
+      // 스페이스바가 당첨되면 1~3칸 중 랜덤으로 사이즈 지정
+      if (key === ' ') {
+        const randomSize = Math.floor(Math.random() * 3) + 1; // 1, 2, or 3
+        targetPattern.push({ key: key, size: randomSize });
+      } else {
+        // 일반 방향키는 무조건 1칸
+        targetPattern.push({ key: key, size: 1 });
+      }
     }
     currentIndex = 0;
     renderArrows();
@@ -199,24 +233,50 @@
   function renderArrows() {
     const box = document.getElementById('arrow-box');
     box.innerHTML = '';
-    targetPattern.forEach((key, index) => {
+    
+    targetPattern.forEach((item, index) => {
       const span = document.createElement('div');
       span.className = 'arrow';
+      
+      if (item.key === 'ArrowUp') span.classList.add('bg-up');
+      if (item.key === 'ArrowDown') span.classList.add('bg-down');
+      if (item.key === 'ArrowLeft') span.classList.add('bg-left');
+      if (item.key === 'ArrowRight') span.classList.add('bg-right');
+      
+      if (item.key === ' ') {
+        span.classList.add('space-key');
+        // 사이즈(칸 수)에 맞춰 가로 너비 동적 계산 (칸당 40px + 칸 사이 여백 8px)
+        span.style.width = `${(item.size * 40) + ((item.size - 1) * 8)}px`;
+      }
+      
       if (index < currentIndex) {
         span.classList.add('correct');
       }
-      span.innerText = arrowSymbols[key];
+
+      if (item.key === ' ') {
+        // 칸 수(size)만큼 망곰이 이미지를 반복해서 넣어줍니다.
+        let imagesHtml = '';
+        for(let i = 0; i < item.size; i++) {
+          imagesHtml += `<img src="망곰이.png" alt="SPACE">`;
+        }
+        span.innerHTML = imagesHtml;
+      } else {
+        span.innerText = arrowSymbols[item.key];
+      }
+      
       box.appendChild(span);
     });
   }
 
   window.addEventListener('keydown', (e) => {
-    if (isGameOver || !arrows.includes(e.key)) return;
+    if (isGameOver) return;
+    
+    if (!validKeys.includes(e.key)) return;
 
-    // 기본 스크롤 방지 (방향키 누를 때 화면 움직임 방지)
     e.preventDefault();
 
-    if (e.key === targetPattern[currentIndex]) {
+    // targetPattern이 객체 배열로 바뀌었으므로 .key로 값을 꺼내어 비교합니다
+    if (e.key === targetPattern[currentIndex].key) {
       currentIndex++;
       renderArrows();
 
