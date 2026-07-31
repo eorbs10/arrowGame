@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>닭장 탈출 - 하이퍼 모드 (기록 표시)</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #1a1a1a; 
+      margin: 0;
+    }
+    #game-card {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.8);
+      text-align: center;
+      width: 550px; 
+    }
+    .arrow-container {
+      display: flex;
+      justify-content: center;
+      flex-wrap: nowrap; 
+      overflow-x: visible; 
+      gap: 8px;
+      margin: 20px 0;
+      font-size: 2rem;
+      font-weight: bold;
+      min-height: 50px;
+    }
+    .arrow {
+      flex-shrink: 0; 
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+    .arrow.correct {
+      background: #4caf50;
+      color: white;
+      border-color: #4caf50;
+    }
+    
+    #timer-container {
+      width: 100%;
+      height: 20px;
+      background: #eee;
+      border-radius: 10px;
+      margin: 15px 0;
+      overflow: hidden;
+      border: 1px solid #ccc;
+    }
+    #timer-bar {
+      width: 100%;
+      height: 100%;
+      background: #4caf50;
+      transition: width 0.02s linear, background 0.2s ease;
+    }
+    
+    #message {
+      font-size: 1.1rem;
+      font-weight: bold;
+      /* 게임 종료 시 메시지가 두 줄로 나올 수 있도록 높이 수정 */
+      min-height: 50px; 
+      margin: 10px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    #restart-btn {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-weight: bold;
+      background-color: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #restart-btn:hover {
+      background-color: #e68a00;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-card">
+  <h2>🐔 닭장 탈출 🐔</h2>
+  <p>스테이지: <span id="stage">1</span></p>
+  
+  <div id="timer-container">
+    <div id="timer-bar"></div>
+  </div>
+  
+  <div class="arrow-container" id="arrow-box"></div>
+  <div id="message">방향키를 눌러 시작하세요!</div>
+  
+  <button id="restart-btn" onclick="startGame()">다시 시작하기</button>
+</div>
+
+<script>
+  const arrows = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+  const arrowSymbols = {
+    'ArrowUp': '↑',
+    'ArrowDown': '↓',
+    'ArrowLeft': '←',
+    'ArrowRight': '→'
+  };
+
+  let currentStage = 1;
+  let targetPattern = [];
+  let currentIndex = 0;
+  
+  let timerInterval;
+  let maxTime = 5; 
+  let timeLeft = 5;
+  let isGameOver = false;
+
+  function startGame() {
+    currentStage = 1;
+    isGameOver = false;
+    document.getElementById('restart-btn').style.display = 'none';
+    document.getElementById('stage').innerText = currentStage;
+    nextStageSetup();
+  }
+
+  function nextStageSetup() {
+    let length = Math.min(4 + currentStage, 10);
+    
+    maxTime = Math.max(5 - (currentStage - 1) * 0.5, 2.4);
+    timeLeft = maxTime;
+    
+    generatePattern(length);
+    document.getElementById('message').innerHTML = "제한시간 내에 입력하세요!";
+    document.getElementById('message').style.color = "#333";
+    
+    startTimer();
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    const timerBar = document.getElementById('timer-bar');
+    
+    timerInterval = setInterval(() => {
+      timeLeft -= 0.02; 
+      
+      let widthPercentage = (timeLeft / maxTime) * 100;
+      timerBar.style.width = widthPercentage + "%";
+      
+      if (widthPercentage > 50) timerBar.style.background = "#4caf50";
+      else if (widthPercentage > 20) timerBar.style.background = "#ff9800";
+      else timerBar.style.background = "#f44336";
+
+      if (timeLeft <= 0) {
+        gameOver("시간 초과!");
+      }
+    }, 20);
+  }
+
+  function gameOver(msg) {
+    isGameOver = true;
+    clearInterval(timerInterval);
+    // 종료 시 최종 스테이지를 함께 출력하도록 수정
+    document.getElementById('message').innerHTML = `<span>❌ ${msg}</span><span>최종 도달 스테이지: <strong>${currentStage}</strong></span>`;
+    document.getElementById('message').style.color = "#f44336";
+    document.getElementById('restart-btn').style.display = 'inline-block';
+  }
+
+  function generatePattern(length) {
+    targetPattern = [];
+    for (let i = 0; i < length; i++) {
+      targetPattern.push(arrows[Math.floor(Math.random() * arrows.length)]);
+    }
+    currentIndex = 0;
+    renderArrows();
+  }
+
+  function renderArrows() {
+    const box = document.getElementById('arrow-box');
+    box.innerHTML = '';
+    targetPattern.forEach((key, index) => {
+      const span = document.createElement('div');
+      span.className = 'arrow';
+      if (index < currentIndex) {
+        span.classList.add('correct');
+      }
+      span.innerText = arrowSymbols[key];
+      box.appendChild(span);
+    });
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (isGameOver || !arrows.includes(e.key)) return;
+
+    if (e.key === targetPattern[currentIndex]) {
+      currentIndex++;
+      renderArrows();
+
+      if (currentIndex === targetPattern.length) {
+        clearInterval(timerInterval); 
+        currentStage++;
+        document.getElementById('stage').innerText = currentStage;
+        document.getElementById('message').innerHTML = "CLEAR!";
+        document.getElementById('message').style.color = "#4caf50";
+        
+        setTimeout(() => {
+          if(!isGameOver) nextStageSetup();
+        }, 150); 
+      }
+    } else {
+      gameOver("잘못된 키를 눌렀습니다!");
+    }
+  });
+
+  startGame();
+</script>
+
+</body>
+</html>
